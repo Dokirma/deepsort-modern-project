@@ -1,5 +1,13 @@
 # DeepSORT Modernization Project
 
-This project extends the original DeepSORT tracker with modern person detection and ReID models.
+This project is based on the original DeepSORT implementation.
 
-The dataset is provided through Google Drive.
+The goal is to extend DeepSORT with:
+
+- modern person detection models
+- modern person ReID models
+- MOT-style evaluation
+- visual overlays for baseline and improved trackers
+- a reproducible Colab workflow
+
+Dataset is provided through Google Drive.

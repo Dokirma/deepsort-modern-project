@@ -1,6 +1,7 @@
 numpy
+scipy
 opencv-python
+scikit-learn
 tqdm
 gdown
 matplotlib
-scikit-learn
