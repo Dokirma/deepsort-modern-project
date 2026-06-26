@@ -280,3 +280,16 @@ The best current version uses:
 - `nn_budget = 100`.
 
 The videos are stored in the `outputs/videos/` directory. This directory is ignored by Git, because generated videos are large and can be recreated from the provided scripts.
+
+
+## 16. Comparison of lightweight detector models on TUD-Campus
+
+To satisfy the requirement of supporting multiple detection models, lightweight YOLO models were compared on TUD-Campus.
+
+| Detector | Conf | Detections | FPS | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| Provided det.txt | - | 322 | - | 0.7143 | 0.6407 | 0.6755 |
+| YOLO11n | 0.40 | 382 | 33.62 | 0.7644 | 0.8134 | 0.7881 |
+| YOLOv8n | 0.40 | 379 | 48.96 | 0.7863 | 0.8301 | 0.8076 |
+
+YOLOv8n achieved the best F1 on TUD-Campus among the tested lightweight detectors. It also had higher FPS than YOLO11n in this experiment. This result shows that a smaller or older detector architecture can still be competitive under limited Colab resources.

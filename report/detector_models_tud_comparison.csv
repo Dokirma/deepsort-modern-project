@@ -1,0 +1,4 @@
+sequence,model,conf,iou,imgsz,detections,fps,precision,recall,f1
+TUD-Campus,provided_det,-,-,-,322,-,0.7143,0.6407,0.6755
+TUD-Campus,yolo11n.pt,0.40,0.60,640,382,33.62,0.7644,0.8134,0.7881
+TUD-Campus,yolov8n.pt,0.40,0.60,640,379,48.96,0.7863,0.8301,0.8076
