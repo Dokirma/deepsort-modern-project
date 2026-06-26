@@ -1,0 +1,3 @@
+sequence,detector,reid_model,max_cosine_distance,hota,deta,assa,idf1,mota,reid_detections_per_sec
+TUD-Campus,YOLO11n,osnet_x0_25,0.30,44.197,47.869,41.160,60.606,53.482,224.80
+TUD-Campus,YOLO11n,osnet_x0_5,0.30,48.294,48.359,48.454,67.218,55.710,252.67

@@ -309,3 +309,15 @@ A third lightweight detector, YOLOv5nu, was evaluated on TUD-Campus to satisfy t
 All three modern detectors improved over the provided detections on TUD-Campus. YOLOv8n achieved the best F1, while YOLOv5nu was also competitive and remained real-time in Colab.
 
 The implementation supports model selection through the `--model` argument of `src/detectors/yolo_detector.py`.
+
+
+## 18. Second ReID model: OSNet x0.5
+
+The second ReID model experiment used OSNet x0.5 from Torchreid. The same YOLO11n detections and the same DeepSORT parameters were used for fair comparison.
+
+| Detector | ReID model | max_cosine_distance | HOTA | DetA | AssA | IDF1 | MOTA | ReID detections/sec |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| YOLO11n | OSNet x0.25 | 0.30 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 | 224.80 |
+| YOLO11n | OSNet x0.5 | 0.30 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 | 252.67 |
+
+OSNet x0.5 outperformed OSNet x0.25 on TUD-Campus. HOTA increased from 44.197 to 48.294, and IDF1 increased from 60.606 to 67.218. This suggests that OSNet x0.5 provides stronger appearance descriptors for this sequence while still remaining fast enough for Colab experiments.
