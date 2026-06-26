@@ -148,3 +148,22 @@ Two confidence thresholds were tested: 0.25 and 0.40. The old provided `det.txt`
 Increasing the confidence threshold from 0.25 to 0.40 reduced the number of false positives and improved F1 from 0.6885 to 0.7881. Compared with the provided detections, YOLO11n with confidence 0.40 improved F1 from 0.6755 to 0.7881 while keeping real-time performance above 5 FPS in Colab.
 
 This configuration is therefore a strong first candidate for the modified DeepSORT detector.
+
+
+## 9. YOLO11n detector evaluation on all sequences
+
+YOLO11n with confidence threshold 0.40 and IoU threshold 0.60 was evaluated on all six sequences. The goal of this experiment was to test whether a modern detector can improve the detection quality before integrating it into DeepSORT.
+
+| Sequence | Old F1 | YOLO11n F1 | YOLO11n Precision | YOLO11n Recall | FPS |
+|---|---:|---:|---:|---:|---:|
+| KITTI-17 | 0.7002 | 0.8692 | 0.9157 | 0.8272 | 35.14 |
+| MOT16-09 | 0.6553 | 0.7370 | 0.8518 | 0.6494 | 62.57 |
+| MOT16-11 | 0.6634 | 0.7276 | 0.9085 | 0.6068 | 62.89 |
+| PETS09-S2L1 | 0.8121 | 0.9018 | 0.8929 | 0.9109 | 59.40 |
+| TUD-Campus | 0.6755 | 0.7881 | 0.7644 | 0.8134 | 33.62 |
+| TUD-Stadtmitte | 0.7294 | 0.8957 | 0.9698 | 0.8322 | 53.14 |
+| **Average** | **0.7060** | **0.8199** | - | - | **51.96** |
+
+YOLO11n improved F1 on every sequence. The average F1 increased from 0.7060 for the provided detections to 0.8199 for YOLO11n. The detector also satisfies the real-time requirement, because the FPS was higher than 5 on every sequence.
+
+This confirms that YOLO11n with confidence 0.40 is a strong candidate detector for the modified DeepSORT pipeline.
