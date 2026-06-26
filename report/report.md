@@ -229,3 +229,34 @@ The `max_cosine_distance` parameter was tuned for the YOLO11n + OSNet x0.25 conf
 The best result was obtained with `max_cosine_distance = 0.30` or `0.40`. Since both values gave the same HOTA, `0.30` was selected as the safer and stricter setting for further experiments.
 
 This tuning slightly improved HOTA from 44.025 to 44.197 compared with the initial OSNet setting, but it still did not outperform the detector-only pseudo-feature variant on TUD-Campus.
+
+
+## 14. DeepSORT with YOLO11n detector and OSNet x0.25 ReID on all sequences
+
+The next experiment evaluated the full modified DeepSORT pipeline with both a modern detector and a modern ReID model.
+
+Configuration:
+
+- detector: YOLO11n
+- detector confidence threshold: 0.40
+- detector IoU threshold: 0.60
+- ReID model: OSNet x0.25 from Torchreid
+- ReID feature dimension: 512
+- DeepSORT `max_cosine_distance`: 0.30
+- `nn_budget`: 100
+
+| Sequence | Original HOTA | YOLO11n + pseudo HOTA | YOLO11n + OSNet HOTA | Original IDF1 | YOLO11n + pseudo IDF1 | YOLO11n + OSNet IDF1 |
+|---|---:|---:|---:|---:|---:|---:|
+| KITTI-17 | 38.351 | 53.283 | 53.287 | 63.594 | 77.457 | 77.279 |
+| MOT16-09 | 25.344 | 33.007 | 32.969 | 31.999 | 37.369 | 36.615 |
+| MOT16-11 | 26.957 | 42.320 | 44.625 | 32.202 | 45.346 | 50.324 |
+| PETS09-S2L1 | 41.363 | 50.293 | 52.779 | 53.757 | 63.337 | 68.561 |
+| TUD-Campus | 35.183 | 46.566 | 44.197 | 52.174 | 65.385 | 60.606 |
+| TUD-Stadtmitte | 37.729 | 53.033 | 53.554 | 55.052 | 64.299 | 72.183 |
+| **COMBINED** | **31.257** | **42.369** | **43.816** | **39.665** | **49.166** | **52.271** |
+
+The full YOLO11n + OSNet x0.25 configuration achieved the best combined HOTA so far: 43.816. This is higher than both the original DeepSORT baseline and the detector-only YOLO11n variant.
+
+The most important improvement from OSNet appears in association-related metrics. Combined IDF1 increased from 49.166 with pseudo features to 52.271 with OSNet. This confirms that the modern ReID model improves identity consistency across the full dataset, even though it was not better on every individual sequence.
+
+The result also shows why evaluation on all sequences is necessary: on TUD-Campus alone, pseudo features performed better, but on the full benchmark OSNet gave the stronger combined result.
