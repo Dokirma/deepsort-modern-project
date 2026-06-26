@@ -387,3 +387,24 @@ Since YOLOv8n achieved better standalone detection F1 than YOLO11n on TUD-Campus
 YOLOv8n + OSNet x0.5 slightly improved HOTA and MOTA on TUD-Campus, but IDF1 decreased compared with YOLO11n + OSNet x0.5. Since the improvement in HOTA was small and the identity metric became worse, this combination was saved as a candidate experiment but was not selected as the final full-benchmark configuration.
 
 The current best fully evaluated configuration remains YOLO11n + OSNet x0.5, because it was evaluated on all six sequences and achieved the best combined HOTA so far.
+
+
+## 22. Final best overlay update
+
+After evaluating OSNet x0.5 on all six sequences, the best current configuration became:
+
+- detector: YOLO11n;
+- ReID model: OSNet x0.5;
+- detector confidence threshold: 0.40;
+- detector IoU threshold: 0.60;
+- DeepSORT `max_cosine_distance`: 0.30;
+- `nn_budget`: 100.
+
+The best overlay video was therefore regenerated for this final configuration:
+
+| Version | Sequence | Output video |
+|---|---|---|
+| Initial original DeepSORT baseline | TUD-Campus | `outputs/videos/TUD-Campus_original_deepsort.mp4` |
+| Final best modified version | TUD-Campus | `outputs/videos/TUD-Campus_best_yolo11n_osnet_x0_5.mp4` |
+
+The final best configuration achieved combined HOTA 45.111, compared with 31.257 for the original DeepSORT baseline.
