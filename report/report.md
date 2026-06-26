@@ -373,3 +373,17 @@ Configuration:
 OSNet x0.5 achieved the best combined HOTA among all tested configurations. The combined HOTA increased from 31.257 for the original DeepSORT baseline to 45.111. IDF1 also increased from 39.665 to 54.055.
 
 Compared with OSNet x0.25, OSNet x0.5 improved the combined HOTA from 43.816 to 45.111 and the combined IDF1 from 52.271 to 54.055. Therefore, the current best configuration is YOLO11n + OSNet x0.5 with `max_cosine_distance = 0.30`.
+
+
+## 21. Candidate combination: YOLOv8n with OSNet x0.5 on TUD-Campus
+
+Since YOLOv8n achieved better standalone detection F1 than YOLO11n on TUD-Campus, an additional combined tracking experiment was performed with YOLOv8n and OSNet x0.5.
+
+| Detector | ReID model | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---|---:|---:|---:|---:|---:|
+| YOLO11n | OSNet x0.5 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 |
+| YOLOv8n | OSNet x0.5 | 48.450 | 50.721 | 46.365 | 64.666 | 57.939 |
+
+YOLOv8n + OSNet x0.5 slightly improved HOTA and MOTA on TUD-Campus, but IDF1 decreased compared with YOLO11n + OSNet x0.5. Since the improvement in HOTA was small and the identity metric became worse, this combination was saved as a candidate experiment but was not selected as the final full-benchmark configuration.
+
+The current best fully evaluated configuration remains YOLO11n + OSNet x0.5, because it was evaluated on all six sequences and achieved the best combined HOTA so far.
