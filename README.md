@@ -4,17 +4,17 @@
 
 This project modifies the original DeepSORT implementation by adding modern person detection and ReID models, evaluating them on MOT-style videos, and comparing the modified system with the original DeepSORT baseline.
 
-The original DeepSORT repository was used as the basis, and its commit history was preserved during the merge.
+The original DeepSORT repository was used as the basis, and the original commit history was preserved.
 
 ## Dataset
 
-The required MOT-style videos are provided through Google Drive instead of the MOTChallenge website.
+The required MOT-style videos are provided through Google Drive.
 
-Google Drive dataset link:
+Dataset archive link:
 
 https://drive.google.com/file/d/1ujjjDlQZ6eEfdfWqJx-L_pgbJkSqRkU8/view?usp=sharing
 
-The archive contains six sequences:
+The archive contains six required sequences:
 
 - KITTI-17
 - MOT16-09
@@ -23,48 +23,35 @@ The archive contains six sequences:
 - TUD-Campus
 - TUD-Stadtmitte
 
-Each sequence contains:
-
-- img1/
-- det/det.txt
-- gt/gt.txt
-- seqinfo.ini
-
 ## Main results
 
 | Method | Detector | ReID | Combined HOTA | Combined IDF1 | Combined MOTA |
 |---|---|---|---:|---:|---:|
-| Original DeepSORT | provided det.txt | pseudo/original-style features | 31.257 | 39.665 | 41.949 |
+| Original DeepSORT | provided det.txt | original / pseudo features | 31.257 | 39.665 | 41.949 |
 | DeepSORT + YOLO11n | YOLO11n | pseudo features | 42.369 | 49.166 | 53.116 |
 | DeepSORT + YOLO11n + OSNet x0.25 | YOLO11n | OSNet x0.25 | 43.816 | 52.271 | 53.414 |
 | DeepSORT + YOLO11n + OSNet x0.5 | YOLO11n | OSNet x0.5 | 45.111 | 54.055 | 53.371 |
 
-Best final configuration:
+Final selected configuration:
 
 - detector: YOLO11n
 - confidence threshold: 0.40
 - detector IoU threshold: 0.60
 - ReID model: OSNet x0.5
-- DeepSORT max_cosine_distance: 0.30
-- DeepSORT nn_budget: 100
+- DeepSORT `max_cosine_distance`: 0.30
+- DeepSORT `nn_budget`: 100
 
-This configuration improves HOTA on every required sequence compared with the original DeepSORT baseline.
+The final configuration improves HOTA on every required sequence compared with the original DeepSORT baseline.
 
-## Supported detection models
+## Supported models
 
-The detector can be selected with the --model argument in src/detectors/yolo_detector.py.
-
-Tested detection models:
+Detection models:
 
 - YOLO11n
 - YOLOv8n
 - YOLOv5nu
 
-## Supported ReID models
-
-The ReID model can be selected with the --model argument in src/reid/osnet_extractor.py.
-
-Tested ReID models:
+ReID models:
 
 - OSNet x0.25
 - OSNet x0.5
@@ -72,94 +59,136 @@ Tested ReID models:
 
 ## Colab execution instructions
 
-### 1. Mount Google Drive
+The project is designed to run in a clean Colab runtime. It does not require old Google Drive outputs.
 
-Run in Colab:
+### 1. Clone repository
 
-    from google.colab import drive
-    drive.mount('/content/drive')
+```python
+%cd /content
+!rm -rf /content/deepsort-modern-project
+!git clone https://github.com/Dokirma/deepsort-modern-project.git /content/deepsort-modern-project
+%cd /content/deepsort-modern-project
+```
 
-### 2. Go to the project folder
+### 2. Install dependencies
 
-    %cd /content/drive/MyDrive/deepsort-modern-project
+```python
+%cd /content/deepsort-modern-project
+!pip install -q -r requirements.txt
+!pip install -q ultralytics torchreid gdown
+```
 
-### 3. Install dependencies
+### 3. Download and extract dataset
 
-    !pip install -q -r requirements.txt
-    !pip install -q ultralytics torchreid
+```python
+%cd /content/deepsort-modern-project
 
-### 4. Download and extract dataset
+!python src/data/download_data.py \
+  --file-id 1ujjjDlQZ6eEfdfWqJx-L_pgbJkSqRkU8 \
+  --output data/raw/dlcv-final-project-videos.tar.gz \
+  --extract-to data/mot
+```
 
-    !python src/data/download_data.py
+Expected dataset folder:
 
-After this step, the dataset should be located in:
+```text
+data/mot/videos/
+```
 
-    data/mot/videos/
+### 4. Run original DeepSORT baseline
 
-### 5. Download TrackEval
+```python
+%cd /content/deepsort-modern-project
+!python src/tracking/run_original_deepsort_all.py
+```
 
-TrackEval is not committed to the repository. Download it in Colab:
+### 5. Run YOLO11n detections
 
-    !mkdir -p external
-    !test -d external/TrackEval || git clone https://github.com/JonathonLuiten/TrackEval.git external/TrackEval
+```python
+%cd /content/deepsort-modern-project
 
-### 6. Run original DeepSORT baseline
+!python src/detectors/run_yolo_all.py \
+  --model yolo11n.pt \
+  --conf 0.40 \
+  --iou 0.60 \
+  --imgsz 640 \
+  --name yolo11n_conf040
+```
 
-    !python src/tracking/run_original_deepsort_all.py
+### 6. Extract OSNet x0.5 ReID features
 
-Evaluate original baseline:
+```python
+%cd /content/deepsort-modern-project
 
-    !python src/evaluation/prepare_trackeval_tracker.py --tracker-name original_deepsort --tracks-dir outputs/tracks/original_deepsort --seqmap-file DLCV-train-original.txt --sequences KITTI-17 MOT16-09 MOT16-11 PETS09-S2L1 TUD-Campus TUD-Stadtmitte
+!python src/reid/run_osnet_features_all.py \
+  --det-dir outputs/detections/yolo11n_conf040 \
+  --output-dir outputs/detections_reid/yolo11n_osnet_x0_5 \
+  --model osnet_x0_5 \
+  --batch-size 32
+```
 
-    !python src/evaluation/run_trackeval.py --tracker-name original_deepsort --seqmap-file DLCV-train-original.txt
+### 7. Run final best DeepSORT version
 
-### 7. Run YOLO11n detections
+```python
+%cd /content/deepsort-modern-project
 
-    !python src/detectors/run_yolo_all.py --model yolo11n.pt --conf 0.40 --iou 0.60 --imgsz 640 --name yolo11n_conf040
+!python src/tracking/run_deepsort_from_reid_all.py \
+  --reid-dir outputs/detections_reid/yolo11n_osnet_x0_5 \
+  --tracker-name deepsort_yolo11n_osnet_x0_5_cos030 \
+  --max-cosine-distance 0.30 \
+  --nn-budget 100
+```
 
-### 8. Extract OSNet x0.5 ReID features
+### 8. Generate overlay videos
 
-    !python src/reid/run_osnet_features_all.py --det-dir outputs/detections/yolo11n_conf040 --output-dir outputs/detections_reid/yolo11n_osnet_x0_5 --model osnet_x0_5 --batch-size 32
+The final Colab notebook generates overlay videos for all six sequences:
 
-### 9. Run final best DeepSORT version
+- 6 videos for the original DeepSORT baseline
+- 6 videos for the final best modified DeepSORT version
 
-    !python src/tracking/run_deepsort_from_reid_all.py --reid-dir outputs/detections_reid/yolo11n_osnet_x0_5 --tracker-name deepsort_yolo11n_osnet_x0_5_cos030 --max-cosine-distance 0.30 --nn-budget 100
+The generated videos are saved to:
 
-### 10. Evaluate final best version
+```text
+outputs/videos/
+outputs/videos_web/
+```
 
-    !python src/evaluation/prepare_trackeval_tracker.py --tracker-name deepsort_yolo11n_osnet_x0_5_cos030 --tracks-dir outputs/tracks/deepsort_yolo11n_osnet_x0_5_cos030 --seqmap-file DLCV-train-best.txt --sequences KITTI-17 MOT16-09 MOT16-11 PETS09-S2L1 TUD-Campus TUD-Stadtmitte
+The `outputs/` directory is ignored by Git because it contains generated files.
 
-    !python src/evaluation/run_trackeval.py --tracker-name deepsort_yolo11n_osnet_x0_5_cos030 --seqmap-file DLCV-train-best.txt
+## Saved artifacts
 
-### 11. Generate overlay videos
+Small generated artifacts such as tracking `.txt` files and detector `.txt` files are saved in the `artifacts/` directory.
 
-Original DeepSORT overlay:
+Large generated files are not committed to GitHub. A local/Drive backup archive may be provided separately:
 
-    !python src/visualization/make_overlay.py --sequence-dir data/mot/videos/TUD-Campus --tracks-file outputs/tracks/original_deepsort/TUD-Campus.txt --output-video outputs/videos/TUD-Campus_original_deepsort.mp4
+```text
+final_outputs_with_videos_*.zip
+```
 
-Best modified version overlay:
+The archive with videos contains:
 
-    !python src/visualization/make_overlay.py --sequence-dir data/mot/videos/TUD-Campus --tracks-file outputs/tracks/deepsort_yolo11n_osnet_x0_5_cos030/TUD-Campus.txt --output-video outputs/videos/TUD-Campus_best_yolo11n_osnet_x0_5.mp4
-
-Generated videos are stored in:
-
-    outputs/videos/
-
-The outputs/ directory is ignored by Git because it contains generated files.
+- 12 tracking `.txt` files
+- 6 detection `.txt` files
+- 6 ReID `.npy` files
+- 12 web-compatible overlay `.mp4` videos
+- report files
 
 ## Report
 
 Detailed report:
 
-    report/report.md
+```text
+report/report.md
+```
 
 Experiment tables:
 
-    report/*.csv
+```text
+report/*.csv
+```
 
 ## Notes
 
-- The project is designed for Google Colab.
-- Generated outputs, model weights, TrackEval and videos are not committed to Git.
-- All important scripts and numerical results are committed.
+- Generated outputs, model weights, TrackEval files, videos and final ZIP archives are not committed to GitHub.
+- The notebook regenerates outputs in a clean Colab runtime.
 - The final best configuration is reproducible using the commands above.

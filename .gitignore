@@ -8,3 +8,14 @@ __pycache__/
 
 *.pt
 *.pth
+
+# Generated outputs and large final archives
+outputs/
+external/
+data/
+*.pt
+*.pth
+*.npy
+*.mp4
+final_outputs_*.zip
+
