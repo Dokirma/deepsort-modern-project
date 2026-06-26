@@ -8,7 +8,7 @@ The original DeepSORT repository was used as the basis, and the original commit 
 
 ## Dataset
 
-The required MOT-style videos are provided through Google Drive.
+The required MOT-style videos are provided through Google Drive instead of the MOTChallenge website.
 
 Dataset archive link:
 
@@ -35,7 +35,7 @@ The archive contains six required sequences:
 Final selected configuration:
 
 - detector: YOLO11n
-- confidence threshold: 0.40
+- detector confidence threshold: 0.40
 - detector IoU threshold: 0.60
 - ReID model: OSNet x0.5
 - DeepSORT `max_cosine_distance`: 0.30
@@ -60,6 +60,12 @@ ReID models:
 ## Colab execution instructions
 
 The project is designed to run in a clean Colab runtime. It does not require old Google Drive outputs.
+
+A clean notebook is provided in:
+
+```text
+notebooks/DeepSORT_Project_clean_submission.ipynb
+```
 
 ### 1. Clone repository
 
@@ -141,7 +147,7 @@ data/mot/videos/
 
 ### 8. Generate overlay videos
 
-The final Colab notebook generates overlay videos for all six sequences:
+The final notebook generates overlay videos for all six sequences:
 
 - 6 videos for the original DeepSORT baseline
 - 6 videos for the final best modified DeepSORT version
@@ -157,9 +163,9 @@ The `outputs/` directory is ignored by Git because it contains generated files.
 
 ## Saved artifacts
 
-Small generated artifacts such as tracking `.txt` files and detector `.txt` files are saved in the `artifacts/` directory.
+Small generated artifacts such as tracking `.txt` files and detector `.txt` files can be saved in the `artifacts/` directory.
 
-Large generated files are not committed to GitHub. A local/Drive backup archive may be provided separately:
+Large generated files are not committed to GitHub. A local or Drive backup archive may be provided separately:
 
 ```text
 final_outputs_with_videos_*.zip

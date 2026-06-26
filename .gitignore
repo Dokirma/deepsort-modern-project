@@ -1,21 +1,19 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+.DS_Store
 
-/data/
-/outputs/
-/external/
-
-*.pt
-*.pth
-
-# Generated outputs and large final archives
+# Local data and generated outputs
+data/
 outputs/
 external/
-data/
+runs/
+
+# Model weights and feature tensors
 *.pt
 *.pth
 *.npy
+
+# Generated videos and final archives
 *.mp4
 final_outputs_*.zip
-
