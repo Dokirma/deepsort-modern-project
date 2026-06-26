@@ -131,3 +131,20 @@ The original DeepSORT baseline was evaluated using TrackEval with HOTA, CLEAR an
 | **COMBINED** | **31.257** | **37.293** | **26.310** | **39.665** | **41.949** |
 
 The combined HOTA of the original baseline is 31.257. The weakest results are observed on MOT16-09 and MOT16-11. These sequences have low association accuracy and relatively low detection recall, which indicates that both the detector and the appearance/ReID component should be improved in the modified system.
+
+
+## 8. First modern detector experiment: YOLO11n
+
+The first modern detector experiment was performed with YOLO11n on the `TUD-Campus` sequence.
+
+Two confidence thresholds were tested: 0.25 and 0.40. The old provided `det.txt` detections were used as the baseline.
+
+| Detector | Model | Conf | Precision | Recall | F1 | FPS |
+|---|---|---:|---:|---:|---:|---:|
+| Provided detections | det.txt | - | 0.7143 | 0.6407 | 0.6755 | - |
+| YOLO | yolo11n.pt | 0.25 | 0.5787 | 0.8496 | 0.6885 | 24.90 |
+| YOLO | yolo11n.pt | 0.40 | 0.7644 | 0.8134 | 0.7881 | 24.40 |
+
+Increasing the confidence threshold from 0.25 to 0.40 reduced the number of false positives and improved F1 from 0.6885 to 0.7881. Compared with the provided detections, YOLO11n with confidence 0.40 improved F1 from 0.6755 to 0.7881 while keeping real-time performance above 5 FPS in Colab.
+
+This configuration is therefore a strong first candidate for the modified DeepSORT detector.
