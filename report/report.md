@@ -179,3 +179,22 @@ The first modified DeepSORT experiment replaced the provided detections with YOL
 | DeepSORT + YOLO11n | YOLO11n conf=0.40 | 46.566 | 44.274 | 49.137 | 65.385 | 53.482 |
 
 Replacing the detector improved HOTA from 35.183 to 46.566 on TUD-Campus. IDF1 also increased from 52.174 to 65.385. This confirms that the YOLO11n detector improves not only detection F1 but also the final tracking quality.
+
+
+## 11. Detector-only DeepSORT update on all sequences
+
+The detector-only modified DeepSORT pipeline was evaluated on all six sequences. In this experiment, the original provided detections were replaced with YOLO11n detections using confidence threshold 0.40 and IoU threshold 0.60. The ReID descriptors were still pseudo descriptors, so this experiment isolates the effect of detector replacement.
+
+| Sequence | Original HOTA | DeepSORT + YOLO11n HOTA | Original IDF1 | DeepSORT + YOLO11n IDF1 | Original MOTA | DeepSORT + YOLO11n MOTA |
+|---|---:|---:|---:|---:|---:|---:|
+| KITTI-17 | 38.351 | 53.283 | 63.594 | 77.457 | 45.396 | 64.194 |
+| MOT16-09 | 25.344 | 33.007 | 31.999 | 37.369 | 31.869 | 37.508 |
+| MOT16-11 | 26.957 | 42.320 | 32.202 | 45.346 | 40.363 | 49.127 |
+| PETS09-S2L1 | 41.363 | 50.293 | 53.757 | 63.337 | 63.462 | 83.484 |
+| TUD-Campus | 35.183 | 46.566 | 52.174 | 65.385 | 44.290 | 53.482 |
+| TUD-Stadtmitte | 37.729 | 53.033 | 55.052 | 64.299 | 43.166 | 77.336 |
+| **COMBINED** | **31.257** | **42.369** | **39.665** | **49.166** | **41.949** | **53.116** |
+
+Replacing the detector with YOLO11n improved HOTA on every sequence. The combined HOTA increased from 31.257 to 42.369. IDF1 also improved from 39.665 to 49.166, and MOTA improved from 41.949 to 53.116.
+
+This confirms that the modern detector improves the final tracking quality, not only the standalone detection F1 score. The next step is to replace the pseudo descriptors with real modern ReID embeddings.
