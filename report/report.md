@@ -114,3 +114,20 @@ The original DeepSORT baseline was executed on all six required sequences. The t
 | TUD-Campus | 285 |
 | TUD-Stadtmitte | 1140 |
 
+
+
+## 7. Original DeepSORT baseline HOTA evaluation
+
+The original DeepSORT baseline was evaluated using TrackEval with HOTA, CLEAR and Identity metrics.
+
+| Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|
+| KITTI-17 | 38.351 | 39.150 | 37.752 | 63.594 | 45.396 |
+| MOT16-09 | 25.344 | 28.163 | 22.935 | 31.999 | 31.869 |
+| MOT16-11 | 26.957 | 36.284 | 20.095 | 32.202 | 40.363 |
+| PETS09-S2L1 | 41.363 | 52.649 | 32.724 | 53.757 | 63.462 |
+| TUD-Campus | 35.183 | 42.198 | 29.556 | 52.174 | 44.290 |
+| TUD-Stadtmitte | 37.729 | 41.582 | 34.684 | 55.052 | 43.166 |
+| **COMBINED** | **31.257** | **37.293** | **26.310** | **39.665** | **41.949** |
+
+The combined HOTA of the original baseline is 31.257. The weakest results are observed on MOT16-09 and MOT16-11. These sequences have low association accuracy and relatively low detection recall, which indicates that both the detector and the appearance/ReID component should be improved in the modified system.
