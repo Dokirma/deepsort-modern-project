@@ -61,10 +61,19 @@ ReID models:
 
 The project is designed to run in a clean Colab runtime. 
 
-A clean notebook is provided in:
+A solution notebook is provided in:
+
+```text
+
+https://github.com/Dokirma/deepsort-modern-project/blob/main/notebooks/DeepSORT_solution_part.ipynb
+
+```
+
+A submission notebook is provided in:
 
 ```text
 [notebooks/DeepSORT_Project_clean_submission.ipynb](https://github.com/Dokirma/deepsort-modern-project/blob/main/notebooks/DeepSORT_Project_submission_checked.ipynb)
+
 ```
 
 ### 1. Clone repository
