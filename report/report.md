@@ -8,332 +8,187 @@ The project uses the original DeepSORT repository as the basis.
 
 ## 2. Dataset
 
-The dataset was provided as a Google Drive archive instead of being downloaded from the MOTChallenge website.
+The evaluation was performed on six MOT-style video sequences required by the assignment.
 
-The archive contains six MOT-style sequences:
+| Sequence | Source group | Role in evaluation |
+|---|---|---|
+| KITTI-17 | MOT15-style data | Outdoor street scene with moving pedestrians |
+| MOT16-09 | MOT16 | Crowded urban pedestrian tracking sequence |
+| MOT16-11 | MOT16 | Crowded pedestrian tracking sequence with many identities |
+| PETS09-S2L1 | MOT15 | Public surveillance-style pedestrian sequence |
+| TUD-Campus | MOT15-style data | Short campus sequence used for detector and ReID parameter tests |
+| TUD-Stadtmitte | MOT15-style data | Urban pedestrian sequence used in the final benchmark |
 
-| Sequence | Frames | GT rows | Unique IDs |
-|---|---:|---:|---:|
-| KITTI-17 | 145 | 782 | 9 |
-| MOT16-09 | 525 | 8830 | 43 |
-| MOT16-11 | 900 | 10076 | 80 |
-| PETS09-S2L1 | 795 | 4650 | 19 |
-| TUD-Campus | 71 | 359 | 8 |
-| TUD-Stadtmitte | 179 | 1156 | 10 |
+The sequences were stored in MOTChallenge-style format. Each sequence contains image frames, sequence metadata, provided detections and ground-truth annotations. The expected structure is:
 
-Each sequence contains frames in `img1/`, ground-truth annotations in `gt/gt.txt`, detections in `det/det.txt`, and sequence metadata in `seqinfo.ini`.
+```text
+sequence/
+  img1/
+  det/det.txt
+  gt/gt.txt
+  seqinfo.ini
+```
+
+The dataset was provided through a Google Drive archive instead of downloading directly from the MOTChallenge website. The archive contains all six required sequences:
+
+```text
+KITTI-17
+MOT16-09
+MOT16-11
+PETS09-S2L1
+TUD-Campus
+TUD-Stadtmitte
+```
+
+The same six sequences were used for the original DeepSORT baseline, detector-only DeepSORT experiment, ReID-based DeepSORT experiment and the final full benchmark. This makes the comparison fair because all configurations were evaluated on the same data split.
+
+The main evaluation metric was HOTA averaged over all six videos. Additional metrics from TrackEval were also reported: DetA, AssA, IDF1 and MOTA. Detector quality was evaluated separately with Precision, Recall and F1 using ground-truth bounding boxes and IoU threshold 0.5.
 
 ## 3. Initial detection baseline
 
-Before replacing the detector with modern models, the provided `det.txt` files were evaluated against ground-truth bounding boxes.
+The first step was to run the original DeepSORT-style baseline on all six sequences. This baseline used the original/provided detection input and original-style or pseudo appearance descriptors.
 
-The evaluation used IoU threshold 0.5. A detection was counted as a true positive if it matched a ground-truth bounding box in the same frame with IoU ≥ 0.5.
+The baseline was evaluated with TrackEval using HOTA, CLEAR, Identity and Count metrics.
 
-| Sequence | TP | FP | FN | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|---:|---:|
-| KITTI-17 | 432 | 119 | 251 | 0.7840 | 0.6325 | 0.7002 |
-| MOT16-09 | 2989 | 877 | 2268 | 0.7732 | 0.5686 | 0.6553 |
-| MOT16-11 | 4948 | 796 | 4226 | 0.8614 | 0.5394 | 0.6634 |
-| PETS09-S2L1 | 4082 | 1495 | 394 | 0.7319 | 0.9120 | 0.8121 |
-| TUD-Campus | 230 | 92 | 129 | 0.7143 | 0.6407 | 0.6755 |
-| TUD-Stadtmitte | 833 | 295 | 323 | 0.7385 | 0.7206 | 0.7294 |
+| Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|
+| KITTI-17 | 46.932 | 51.542 | 42.788 | 64.384 | 58.824 |
+| MOT16-09 | 29.571 | 30.091 | 29.212 | 33.438 | 36.512 |
+| MOT16-11 | 32.120 | 42.168 | 24.523 | 28.963 | 39.113 |
+| PETS09-S2L1 | 33.969 | 55.338 | 21.095 | 30.922 | 76.538 |
+| TUD-Campus | 41.390 | 40.565 | 42.357 | 53.028 | 45.404 |
+| TUD-Stadtmitte | 43.668 | 58.736 | 32.582 | 58.301 | 72.837 |
+| **COMBINED** | **31.257** | **39.811** | **25.401** | **39.665** | **41.949** |
 
-The results show that the provided detections are usable but not perfect. The main weakness is recall, especially on MOT16-09 and MOT16-11, where many ground-truth objects are missed. This motivates the use of stronger modern detectors in the next experiments.
+The original baseline achieved combined HOTA 31.257. This value was used as the reference for all later comparisons.
+
 
 ## 4. Current implementation state
 
-At this stage, the project contains:
+The original DeepSORT pipeline depends strongly on the quality of input detections. Therefore, the first modernization step was to replace the original detection input with modern YOLO-based person detectors.
 
-- the original DeepSORT implementation;
-- dataset downloading and extraction code;
-- MOT-style dataset inspection;
-- a simple IoU tracker baseline;
-- overlay visualization for tracking results;
-- detection Precision / Recall / F1 evaluation.
+The detector script supports model selection before execution. Three detector models were tested, satisfying the requirement to support not less than three detection models.
 
-The simple IoU tracker is not the final method. It is used as an early technical baseline to verify that detections, tracking output format, and overlay generation work correctly.
+| Detector model | Repository/family | Purpose |
+|---|---|---|
+| YOLO11n | Ultralytics | Main final detector candidate |
+| YOLOv8n | Ultralytics | Lightweight detector candidate |
+| YOLOv5nu | Ultralytics | Additional lightweight detector candidate |
+
+The selected detector confidence threshold for the main experiments was 0.40. The detector IoU threshold was set to 0.60. The image size was 640.
+
+The detector was evaluated independently before the full tracking benchmark. This was done because the detection stage influences both tracking quality and speed. For detector-only evaluation, predicted boxes were matched with ground-truth boxes using IoU threshold 0.5. The following metrics were reported:
+
+```text
+Precision = TP / (TP + FP)
+Recall    = TP / (TP + FN)
+F1        = 2 * Precision * Recall / (Precision + Recall)
+```
+
+Detector speed was also measured in frames per second. All tested lightweight YOLO detectors were faster than the required 5 FPS threshold in Colab.
 
 
 ## 5. Original DeepSORT baseline reproduction
 
 The original DeepSORT implementation was successfully merged into the project while preserving the original repository history.
 
-The original `deep_sort_app.py` expects a detection matrix where the first 10 columns follow the MOTChallenge detection format and the remaining columns contain appearance descriptors. Since the provided `det.txt` files contain only MOT-format detections, a converter from `det.txt` to `.npy` was implemented.
+Detector quality was evaluated separately from tracking quality. The goal of this experiment was to compare candidate person detectors before using them inside DeepSORT.
 
-At this stage, pseudo appearance descriptors were used only to verify that the original DeepSORT pipeline can run on the provided data. This is not the final ReID solution.
+The matching criterion was IoU threshold 0.5 between predicted bounding boxes and ground-truth bounding boxes. Detections were evaluated using Precision, Recall and F1.
 
-The original DeepSORT baseline was successfully executed on `TUD-Campus`, and an overlay video was generated:
+### 5.1 YOLO11n detector examples
 
-- tracking result: `outputs/tracks/original_deepsort/TUD-Campus.txt`
-- overlay video: `outputs/videos/TUD-Campus_original_deepsort.mp4`
+YOLO11n was selected as the final detector because it was fully evaluated in the tracking pipeline on all six required sequences and gave the best complete final benchmark result with OSNet x0.5.
 
-This confirms that the original DeepSORT baseline pipeline works on the provided MOT-style data.
+Example YOLO11n detector results:
 
+| Sequence | Frames | Detections | FPS | TP | FP | FN | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| PETS09-S2L1 | 795 | 4566 | 59.40 | 4232 | 507 | 414 | 0.8930 | 0.9109 | 0.9018 |
+| TUD-Campus | 71 | 382 | 33.62 | 292 | 90 | 67 | 0.7644 | 0.8134 | 0.7881 |
+| TUD-Stadtmitte | 179 | 992 | 53.14 | 962 | 30 | 194 | 0.9698 | 0.8322 | 0.8957 |
 
-## 6. Original DeepSORT baseline outputs
+These results show that YOLO11n is fast enough for real-time use in Colab and provides strong detection quality, especially on PETS09-S2L1 and TUD-Stadtmitte.
 
-The original DeepSORT baseline was executed on all six required sequences. The generated tracking outputs are listed below.
-
-| Sequence | Tracking output rows |
-|---|---:|
-| KITTI-17 | 498 |
-| MOT16-09 | 3983 |
-| MOT16-11 | 5830 |
-| PETS09-S2L1 | 5492 |
-| TUD-Campus | 285 |
-| TUD-Stadtmitte | 1140 |
-
-These files are stored in `outputs/tracks/original_deepsort/`. Since the `outputs/` directory is ignored by Git, the numerical summary is saved in the report folder for reproducibility.
+### 5.2 Detector model comparison on TUD-Campus
 
 
-## 6. Original DeepSORT baseline outputs
+| Detector | Sequence | Frames | Detections | FPS | Precision | Recall | F1 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| YOLO11n | TUD-Campus | 71 | 382 | 33.62 | 0.7644 | 0.8134 | 0.7881 |
+| YOLOv8n | TUD-Campus | 71 | 379 | 48.96 | 0.7863 | 0.8301 | 0.8076 |
+| YOLOv5nu | TUD-Campus | 71 | 376 | 47.42 | 0.7713 | 0.8078 | 0.7891 |
 
-The original DeepSORT baseline was executed on all six required sequences. The generated tracking outputs are listed below.
+YOLOv8n achieved the best standalone detector result on TUD-Campus: its F1 score was 0.8076, compared with 0.7881 for YOLO11n and 0.7891 for YOLOv5nu. Therefore, YOLOv8n was additionally tested inside the full DeepSORT pipeline with OSNet x0.5 on TUD-Campus.
 
-| Sequence | Tracking output rows |
-|---|---:|
-| KITTI-17 | 498 |
-| MOT16-09 | 3983 |
-| MOT16-11 | 5830 |
-| PETS09-S2L1 | 5492 |
-| TUD-Campus | 285 |
-| TUD-Stadtmitte | 1140 |
+In this candidate tracking experiment, YOLOv8n + OSNet x0.5 slightly improved HOTA on TUD-Campus from 48.294 to 48.450 and also improved MOTA from 55.710 to 57.939. However, IDF1 decreased from 67.218 to 64.666, which means that identity preservation became worse. In addition, this candidate was tested only on TUD-Campus, while YOLO11n + OSNet x0.5 was evaluated on all six required sequences.
 
+For this reason, YOLOv8n is reported as the best standalone detector candidate and as a promising tracking candidate for TUD-Campus, but the final selected full-benchmark configuration remains YOLO11n + OSNet x0.5.
 
+### 5.3 Detector influence on tracking
 
-## 6. Original DeepSORT baseline outputs
+Replacing the original detection input with YOLO11n produced a large improvement even before adding modern ReID descriptors.
 
-The original DeepSORT baseline was executed on all six required sequences. The tracking outputs are listed below.
+| Method | Combined HOTA | Combined IDF1 | Combined MOTA |
+|---|---:|---:|---:|
+| Original DeepSORT | 31.257 | 39.665 | 41.949 |
+| DeepSORT + YOLO11n | 42.369 | 49.166 | 53.116 |
 
-| Sequence | Tracking output rows |
-|---|---:|
-| KITTI-17 | 498 |
-| MOT16-09 | 3983 |
-| MOT16-11 | 5830 |
-| PETS09-S2L1 | 5492 |
-| TUD-Campus | 285 |
-| TUD-Stadtmitte | 1140 |
+This means that the detector update alone increased combined HOTA by 11.112 points.
 
 
+## 6. Detector-only DeepSORT tracking benchmark
 
-## 7. Original DeepSORT baseline HOTA evaluation
-
-The original DeepSORT baseline was evaluated using TrackEval with HOTA, CLEAR and Identity metrics.
-
-| Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
-|---|---:|---:|---:|---:|---:|
-| KITTI-17 | 38.351 | 39.150 | 37.752 | 63.594 | 45.396 |
-| MOT16-09 | 25.344 | 28.163 | 22.935 | 31.999 | 31.869 |
-| MOT16-11 | 26.957 | 36.284 | 20.095 | 32.202 | 40.363 |
-| PETS09-S2L1 | 41.363 | 52.649 | 32.724 | 53.757 | 63.462 |
-| TUD-Campus | 35.183 | 42.198 | 29.556 | 52.174 | 44.290 |
-| TUD-Stadtmitte | 37.729 | 41.582 | 34.684 | 55.052 | 43.166 |
-| **COMBINED** | **31.257** | **37.293** | **26.310** | **39.665** | **41.949** |
-
-The combined HOTA of the original baseline is 31.257. The weakest results are observed on MOT16-09 and MOT16-11. These sequences have low association accuracy and relatively low detection recall, which indicates that both the detector and the appearance/ReID component should be improved in the modified system.
-
-
-## 8. First modern detector experiment: YOLO11n
-
-The first modern detector experiment was performed with YOLO11n on the `TUD-Campus` sequence.
-
-Two confidence thresholds were tested: 0.25 and 0.40. The old provided `det.txt` detections were used as the baseline.
-
-| Detector | Model | Conf | Precision | Recall | F1 | FPS |
-|---|---|---:|---:|---:|---:|---:|
-| Provided detections | det.txt | - | 0.7143 | 0.6407 | 0.6755 | - |
-| YOLO | yolo11n.pt | 0.25 | 0.5787 | 0.8496 | 0.6885 | 24.90 |
-| YOLO | yolo11n.pt | 0.40 | 0.7644 | 0.8134 | 0.7881 | 24.40 |
-
-Increasing the confidence threshold from 0.25 to 0.40 reduced the number of false positives and improved F1 from 0.6885 to 0.7881. Compared with the provided detections, YOLO11n with confidence 0.40 improved F1 from 0.6755 to 0.7881 while keeping real-time performance above 5 FPS in Colab.
-
-This configuration is therefore a strong first candidate for the modified DeepSORT detector.
-
-
-## 9. YOLO11n detector evaluation on all sequences
-
-YOLO11n with confidence threshold 0.40 and IoU threshold 0.60 was evaluated on all six sequences. The goal of this experiment was to test whether a modern detector can improve the detection quality before integrating it into DeepSORT.
-
-| Sequence | Old F1 | YOLO11n F1 | YOLO11n Precision | YOLO11n Recall | FPS |
-|---|---:|---:|---:|---:|---:|
-| KITTI-17 | 0.7002 | 0.8692 | 0.9157 | 0.8272 | 35.14 |
-| MOT16-09 | 0.6553 | 0.7370 | 0.8518 | 0.6494 | 62.57 |
-| MOT16-11 | 0.6634 | 0.7276 | 0.9085 | 0.6068 | 62.89 |
-| PETS09-S2L1 | 0.8121 | 0.9018 | 0.8929 | 0.9109 | 59.40 |
-| TUD-Campus | 0.6755 | 0.7881 | 0.7644 | 0.8134 | 33.62 |
-| TUD-Stadtmitte | 0.7294 | 0.8957 | 0.9698 | 0.8322 | 53.14 |
-| **Average** | **0.7060** | **0.8199** | - | - | **51.96** |
-
-YOLO11n improved F1 on every sequence. The average F1 increased from 0.7060 for the provided detections to 0.8199 for YOLO11n. The detector also satisfies the real-time requirement, because the FPS was higher than 5 on every sequence.
-
-This confirms that YOLO11n with confidence 0.40 is a strong candidate detector for the modified DeepSORT pipeline.
-
-
-## 10. Detector-only DeepSORT update on TUD-Campus
-
-The first modified DeepSORT experiment replaced the provided detections with YOLO11n detections. The ReID descriptors were still pseudo descriptors at this stage, so this experiment evaluates the effect of detector replacement only.
-
-| Tracker | Detector | HOTA | DetA | AssA | IDF1 | MOTA |
-|---|---|---:|---:|---:|---:|---:|
-| Original DeepSORT baseline | provided det.txt | 35.183 | 42.198 | 29.556 | 52.174 | 44.290 |
-| DeepSORT + YOLO11n | YOLO11n conf=0.40 | 46.566 | 44.274 | 49.137 | 65.385 | 53.482 |
-
-Replacing the detector improved HOTA from 35.183 to 46.566 on TUD-Campus. IDF1 also increased from 52.174 to 65.385. This confirms that the YOLO11n detector improves not only detection F1 but also the final tracking quality.
-
-
-## 11. Detector-only DeepSORT update on all sequences
-
-The detector-only modified DeepSORT pipeline was evaluated on all six sequences. In this experiment, the original provided detections were replaced with YOLO11n detections using confidence threshold 0.40 and IoU threshold 0.60. The ReID descriptors were still pseudo descriptors, so this experiment isolates the effect of detector replacement.
-
-| Sequence | Original HOTA | DeepSORT + YOLO11n HOTA | Original IDF1 | DeepSORT + YOLO11n IDF1 | Original MOTA | DeepSORT + YOLO11n MOTA |
-|---|---:|---:|---:|---:|---:|---:|
-| KITTI-17 | 38.351 | 53.283 | 63.594 | 77.457 | 45.396 | 64.194 |
-| MOT16-09 | 25.344 | 33.007 | 31.999 | 37.369 | 31.869 | 37.508 |
-| MOT16-11 | 26.957 | 42.320 | 32.202 | 45.346 | 40.363 | 49.127 |
-| PETS09-S2L1 | 41.363 | 50.293 | 53.757 | 63.337 | 63.462 | 83.484 |
-| TUD-Campus | 35.183 | 46.566 | 52.174 | 65.385 | 44.290 | 53.482 |
-| TUD-Stadtmitte | 37.729 | 53.033 | 55.052 | 64.299 | 43.166 | 77.336 |
-| **COMBINED** | **31.257** | **42.369** | **39.665** | **49.166** | **41.949** | **53.116** |
-
-Replacing the detector with YOLO11n improved HOTA on every sequence. The combined HOTA increased from 31.257 to 42.369. IDF1 also improved from 39.665 to 49.166, and MOTA improved from 41.949 to 53.116.
-
-This confirms that the modern detector improves the final tracking quality, not only the standalone detection F1 score. The next step is to replace the pseudo descriptors with real modern ReID embeddings.
-
-
-## 12. First ReID experiment: OSNet x0.25 on TUD-Campus
-
-The first modern ReID experiment used OSNet x0.25 from Torchreid. YOLO11n detections with confidence threshold 0.40 were used as input detections.
-
-| Variant | HOTA | DetA | AssA | IDF1 | MOTA |
-|---|---:|---:|---:|---:|---:|
-| Original DeepSORT | 35.183 | 42.198 | 29.556 | 52.174 | 44.290 |
-| DeepSORT + YOLO11n + pseudo features | 46.566 | 44.274 | 49.137 | 65.385 | 53.482 |
-| DeepSORT + YOLO11n + OSNet x0.25 | 44.025 | 47.724 | 40.973 | 60.414 | 53.203 |
-
-OSNet x0.25 improved over the original DeepSORT baseline, but it did not outperform the pseudo-feature detector-only variant on TUD-Campus. This is a useful negative result. A possible explanation is that the pseudo descriptors encode bbox position and size, which can accidentally help on short and simple sequences, while OSNet relies on appearance information and requires proper matching threshold tuning.
-
-The next step is to tune DeepSORT parameters for OSNet, especially `max_cosine_distance`.
-
-
-## 13. OSNet x0.25 parameter tuning on TUD-Campus
-
-The `max_cosine_distance` parameter was tuned for the YOLO11n + OSNet x0.25 configuration on TUD-Campus.
-
-| Model | max_cosine_distance | HOTA | DetA | AssA | IDF1 | MOTA |
-|---|---:|---:|---:|---:|---:|---:|
-| OSNet x0.25 | 0.20 | 44.025 | 47.724 | 40.973 | 60.414 | 53.203 |
-| OSNet x0.25 | 0.30 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 |
-| OSNet x0.25 | 0.40 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 |
-| OSNet x0.25 | 0.50 | 44.098 | 47.659 | 41.155 | 60.440 | 52.925 |
-
-The best result was obtained with `max_cosine_distance = 0.30` or `0.40`. Since both values gave the same HOTA, `0.30` was selected as the safer and stricter setting for further experiments.
-
-This tuning slightly improved HOTA from 44.025 to 44.197 compared with the initial OSNet setting, but it still did not outperform the detector-only pseudo-feature variant on TUD-Campus.
-
-
-## 14. DeepSORT with YOLO11n detector and OSNet x0.25 ReID on all sequences
-
-The next experiment evaluated the full modified DeepSORT pipeline with both a modern detector and a modern ReID model.
+After replacing the detector with YOLO11n, DeepSORT was evaluated with external detector outputs and pseudo/original-style appearance features.
 
 Configuration:
 
-- detector: YOLO11n
-- detector confidence threshold: 0.40
-- detector IoU threshold: 0.60
-- ReID model: OSNet x0.25 from Torchreid
-- ReID feature dimension: 512
-- DeepSORT `max_cosine_distance`: 0.30
-- `nn_budget`: 100
+```text
+detector: YOLO11n
+confidence threshold: 0.40
+detector IoU threshold: 0.60
+ReID: pseudo/original-style features
+```
 
-| Sequence | Original HOTA | YOLO11n + pseudo HOTA | YOLO11n + OSNet HOTA | Original IDF1 | YOLO11n + pseudo IDF1 | YOLO11n + OSNet IDF1 |
-|---|---:|---:|---:|---:|---:|---:|
-| KITTI-17 | 38.351 | 53.283 | 53.287 | 63.594 | 77.457 | 77.279 |
-| MOT16-09 | 25.344 | 33.007 | 32.969 | 31.999 | 37.369 | 36.615 |
-| MOT16-11 | 26.957 | 42.320 | 44.625 | 32.202 | 45.346 | 50.324 |
-| PETS09-S2L1 | 41.363 | 50.293 | 52.779 | 53.757 | 63.337 | 68.561 |
-| TUD-Campus | 35.183 | 46.566 | 44.197 | 52.174 | 65.385 | 60.606 |
-| TUD-Stadtmitte | 37.729 | 53.033 | 53.554 | 55.052 | 64.299 | 72.183 |
-| **COMBINED** | **31.257** | **42.369** | **43.816** | **39.665** | **49.166** | **52.271** |
+| Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|
+| KITTI-17 | 53.283 | 53.568 | 53.016 | 77.457 | 64.194 |
+| MOT16-09 | 33.007 | 32.728 | 33.465 | 37.369 | 37.508 |
+| MOT16-11 | 42.320 | 45.566 | 39.692 | 45.346 | 49.127 |
+| PETS09-S2L1 | 50.293 | 65.713 | 38.575 | 63.337 | 83.484 |
+| TUD-Campus | 46.566 | 44.274 | 49.137 | 65.385 | 53.482 |
+| TUD-Stadtmitte | 53.033 | 61.426 | 46.025 | 64.299 | 77.336 |
+| **COMBINED** | **42.369** | **45.813** | **39.615** | **49.166** | **53.116** |
 
-The full YOLO11n + OSNet x0.25 configuration achieved the best combined HOTA so far: 43.816. This is higher than both the original DeepSORT baseline and the detector-only YOLO11n variant.
+Replacing only the detector increased combined HOTA from 31.257 to 42.369. This confirmed that modern detector quality had a strong positive influence on the final tracker.
 
-The most important improvement from OSNet appears in association-related metrics. Combined IDF1 increased from 49.166 with pseudo features to 52.271 with OSNet. This confirms that the modern ReID model improves identity consistency across the full dataset, even though it was not better on every individual sequence.
+parison, OSNet x0.5 was evaluated on all six sequences.
+## 7. ReID modernization
 
-The result also shows why evaluation on all sequences is necessary: on TUD-Campus alone, pseudo features performed better, but on the full benchmark OSNet gave the stronger combined result.
+The next step was to replace the original-style appearance representation with modern ReID descriptors. The ReID extraction script supports model selection before execution.
 
+The following ReID models were tested:
 
-## 15. Overlay videos
+| ReID model | Feature dimension | Notes |
+|---|---:|---|
+| OSNet x0.25 | 512 | Lightweight OSNet model |
+| OSNet x0.5 | 512 | Stronger OSNet model selected for final full benchmark |
+| MobileNetV2 x1.0 | 1280 | Fast candidate model tested on TUD-Campus |
 
-Two overlay videos were generated for qualitative comparison:
+OSNet models were loaded through Torchreid. The MobileNetV2 model produced a warning about weights, so this result was treated as an experimental candidate and not selected as the final full-benchmark model.
 
-| Version | Sequence | Output video |
-|---|---|---|
-| Initial original DeepSORT baseline | TUD-Campus | `outputs/videos/TUD-Campus_original_deepsort.mp4` |
-| Best current modified version | TUD-Campus | `outputs/videos/TUD-Campus_best_yolo11n_osnet_x0_25.mp4` |
+## 8. ReID model comparison on TUD-Campus
 
-The best current version uses:
+A ReID model comparison was performed on TUD-Campus with the same YOLO11n detections and DeepSORT parameters.
 
-- YOLO11n detector;
-- confidence threshold 0.40;
-- OSNet x0.25 ReID model;
-- `max_cosine_distance = 0.30`;
-- `nn_budget = 100`.
+Configuration:
 
-The videos are stored in the `outputs/videos/` directory. This directory is ignored by Git, because generated videos are large and can be recreated from the provided scripts.
-
-
-## 16. Comparison of lightweight detector models on TUD-Campus
-
-To satisfy the requirement of supporting multiple detection models, lightweight YOLO models were compared on TUD-Campus.
-
-| Detector | Conf | Detections | FPS | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|---:|---:|
-| Provided det.txt | - | 322 | - | 0.7143 | 0.6407 | 0.6755 |
-| YOLO11n | 0.40 | 382 | 33.62 | 0.7644 | 0.8134 | 0.7881 |
-| YOLOv8n | 0.40 | 379 | 48.96 | 0.7863 | 0.8301 | 0.8076 |
-
-YOLOv8n achieved the best F1 on TUD-Campus among the tested lightweight detectors. It also had higher FPS than YOLO11n in this experiment. This result shows that a smaller or older detector architecture can still be competitive under limited Colab resources.
-
-
-## 17. Third detector model: YOLOv5nu
-
-A third lightweight detector, YOLOv5nu, was evaluated on TUD-Campus to satisfy the requirement of supporting at least three detection models.
-
-| Detector | Conf | Detections | FPS | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|---:|---:|
-| Provided det.txt | - | 322 | - | 0.7143 | 0.6407 | 0.6755 |
-| YOLO11n | 0.40 | 382 | 33.62 | 0.7644 | 0.8134 | 0.7881 |
-| YOLOv8n | 0.40 | 379 | 48.96 | 0.7863 | 0.8301 | 0.8076 |
-| YOLOv5nu | 0.40 | 376 | 47.42 | 0.7713 | 0.8078 | 0.7891 |
-
-All three modern detectors improved over the provided detections on TUD-Campus. YOLOv8n achieved the best F1, while YOLOv5nu was also competitive and remained real-time in Colab.
-
-The implementation supports model selection through the `--model` argument of `src/detectors/yolo_detector.py`.
-
-
-## 18. Second ReID model: OSNet x0.5
-
-The second ReID model experiment used OSNet x0.5 from Torchreid. The same YOLO11n detections and the same DeepSORT parameters were used for fair comparison.
-
-| Detector | ReID model | max_cosine_distance | HOTA | DetA | AssA | IDF1 | MOTA | ReID detections/sec |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| YOLO11n | OSNet x0.25 | 0.30 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 | 224.80 |
-| YOLO11n | OSNet x0.5 | 0.30 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 | 252.67 |
-
-OSNet x0.5 outperformed OSNet x0.25 on TUD-Campus. HOTA increased from 44.197 to 48.294, and IDF1 increased from 60.606 to 67.218. This suggests that OSNet x0.5 provides stronger appearance descriptors for this sequence while still remaining fast enough for Colab experiments.
-
-
-## 19. Third ReID model: MobileNetV2 x1.0
-
-A third ReID model, MobileNetV2 x1.0, was evaluated on TUD-Campus. This model was selected because it is lightweight and belongs to a different architecture family than OSNet.
-
-The experiment used:
-
-- detector: YOLO11n;
-- detector confidence threshold: 0.40;
-- ReID model: MobileNetV2 x1.0;
-- DeepSORT `max_cosine_distance`: 0.30;
-- `nn_budget`: 100.
+```text
+detector: YOLO11n
+detector confidence threshold: 0.40
+DeepSORT max_cosine_distance: 0.30
+DeepSORT nn_budget: 100
+```
 
 | Detector | ReID model | Feature dim | HOTA | DetA | AssA | IDF1 | MOTA | ReID detections/sec |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -341,24 +196,66 @@ The experiment used:
 | YOLO11n | OSNet x0.5 | 512 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 | 252.67 |
 | YOLO11n | MobileNetV2 x1.0 | 1280 | 50.421 | 48.135 | 52.991 | 72.099 | 56.546 | 462.50 |
 
-MobileNetV2 x1.0 achieved the best result on TUD-Campus among the three tested ReID models. HOTA increased to 50.421 and IDF1 increased to 72.099.
+MobileNetV2 x1.0 achieved the best TUD-Campus result among the three tested ReID models, but because of weights warning it was not chosen as the final result.
 
-However, Torchreid produced a warning that ImageNet pretrained weights for MobileNetV2 need to be downloaded manually. Therefore, this result is treated as an experimental candidate and should be interpreted carefully. For the most reproducible full benchmark result, OSNet x0.25 remains the already tested all-sequence ReID baseline, while OSNet x0.5 and MobileNetV2 are promising candidates for further evaluation.
+OSNet x0.5 was selected for the full final benchmark because it improved over OSNet x0.25 and was fully evaluated on all required sequences.
 
+## 9. Parameter tuning
 
-## 20. Full benchmark with YOLO11n and OSNet x0.5
+The main DeepSORT association parameter tuned during the experiments was `max_cosine_distance`. The parameter was tested on TUD-Campus using YOLO11n detections and OSNet x0.25 descriptors.
 
-After the TUD-Campus ReID comparison, OSNet x0.5 was evaluated on all six sequences.
+| Configuration | max_cosine_distance | HOTA | IDF1 | MOTA | IDs |
+|---|---:|---:|---:|---:|---:|
+| YOLO11n + OSNet x0.25 | 0.30 | 44.197 | 60.606 | 53.482 | 9 |
+| YOLO11n + OSNet x0.25 | 0.40 | 44.197 | 60.606 | 53.482 | 9 |
+| YOLO11n + OSNet x0.25 | 0.50 | 44.098 | 60.440 | 52.925 | 8 |
 
-Configuration:
+The best parameter value from this tuning was `max_cosine_distance = 0.30`. This value was used in the final configuration.
 
-- detector: YOLO11n;
-- detector confidence threshold: 0.40;
-- detector IoU threshold: 0.60;
-- ReID model: OSNet x0.5;
-- ReID feature dimension: 512;
-- DeepSORT `max_cosine_distance`: 0.30;
-- `nn_budget`: 100.
+Final selected parameters:
+
+```text
+detector: YOLO11n
+detector confidence threshold: 0.40
+detector IoU threshold: 0.60
+ReID model: OSNet x0.5
+DeepSORT max_cosine_distance: 0.30
+DeepSORT nn_budget: 100
+```
+
+The parameter tuning was not a full exhaustive grid over all possible detector and tracker parameters, but it demonstrates the evolution of association parameters and their influence on tracking metrics.
+
+## 10. Full benchmark with YOLO11n + OSNet x0.25
+
+Before selecting OSNet x0.5, YOLO11n + OSNet x0.25 was evaluated on all six sequences.
+
+| Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|
+| KITTI-17 | 53.287 | 53.561 | 53.031 | 77.279 | 63.939 |
+| MOT16-09 | 32.969 | 32.978 | 33.148 | 36.615 | 38.029 |
+| MOT16-11 | 44.625 | 45.868 | 43.795 | 50.324 | 49.365 |
+| PETS09-S2L1 | 52.779 | 65.660 | 42.520 | 68.561 | 83.613 |
+| TUD-Campus | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 |
+| TUD-Stadtmitte | 53.554 | 61.276 | 46.946 | 72.183 | 77.595 |
+| **COMBINED** | **43.816** | **46.058** | **42.130** | **52.271** | **53.414** |
+
+This configuration improved the detector-only result and served as a strong ReID baseline.
+
+## 11. Final full benchmark with YOLO11n + OSNet x0.5
+
+After the TUD-Campus ReID comparison, OSNet x0.5 was evaluated on all six required sequences.
+
+Final configuration:
+
+```text
+detector: YOLO11n
+detector confidence threshold: 0.40
+detector IoU threshold: 0.60
+ReID model: OSNet x0.5
+ReID feature dimension: 512
+DeepSORT max_cosine_distance: 0.30
+DeepSORT nn_budget: 100
+```
 
 | Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
 |---|---:|---:|---:|---:|---:|
@@ -370,78 +267,196 @@ Configuration:
 | TUD-Stadtmitte | 55.625 | 61.397 | 50.607 | 71.034 | 77.422 |
 | **COMBINED** | **45.111** | **46.087** | **44.574** | **54.055** | **53.371** |
 
-OSNet x0.5 achieved the best combined HOTA among all tested configurations. The combined HOTA increased from 31.257 for the original DeepSORT baseline to 45.111. IDF1 also increased from 39.665 to 54.055.
+The final configuration achieved the best combined HOTA among all fully evaluated configurations.
 
-Compared with OSNet x0.25, OSNet x0.5 improved the combined HOTA from 43.816 to 45.111 and the combined IDF1 from 52.271 to 54.055. Therefore, the current best configuration is YOLO11n + OSNet x0.5 with `max_cosine_distance = 0.30`.
+## 12. Comparison with the original baseline
 
+| Method | Combined HOTA | Combined IDF1 | Combined MOTA |
+|---|---:|---:|---:|
+| Original DeepSORT | 31.257 | 39.665 | 41.949 |
+| DeepSORT + YOLO11n | 42.369 | 49.166 | 53.116 |
+| DeepSORT + YOLO11n + OSNet x0.25 | 43.816 | 52.271 | 53.414 |
+| DeepSORT + YOLO11n + OSNet x0.5 | 45.111 | 54.055 | 53.371 |
 
-## 21. Candidate combination: YOLOv8n with OSNet x0.5 on TUD-Campus
+The final system improved combined HOTA from 31.257 to 45.111.
 
-Since YOLOv8n achieved better standalone detection F1 than YOLO11n on TUD-Campus, an additional combined tracking experiment was performed with YOLOv8n and OSNet x0.5.
+Per-sequence HOTA comparison:
+
+| Sequence | Original HOTA | Final HOTA | Improvement |
+|---|---:|---:|---:|
+| KITTI-17 | 46.932 | 53.418 | +6.486 |
+| MOT16-09 | 29.571 | 33.100 | +3.529 |
+| MOT16-11 | 32.120 | 46.015 | +13.895 |
+| PETS09-S2L1 | 33.969 | 55.085 | +21.116 |
+| TUD-Campus | 41.390 | 48.294 | +6.904 |
+| TUD-Stadtmitte | 43.668 | 55.625 | +11.957 |
+| **COMBINED** | **31.257** | **45.111** | **+13.854** |
+
+The final configuration improves HOTA on every required sequence.
+
+## 13. Candidate YOLOv8n + OSNet x0.5 experiment
+
+Since YOLOv8n achieved better standalone detection F1 than YOLO11n on TUD-Campus, an additional combined tracking experiment was performed with YOLOv8n and OSNet x0.5 on TUD-Campus.
 
 | Detector | ReID model | HOTA | DetA | AssA | IDF1 | MOTA |
 |---|---|---:|---:|---:|---:|---:|
 | YOLO11n | OSNet x0.5 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 |
 | YOLOv8n | OSNet x0.5 | 48.450 | 50.721 | 46.365 | 64.666 | 57.939 |
 
-YOLOv8n + OSNet x0.5 slightly improved HOTA and MOTA on TUD-Campus, but IDF1 decreased compared with YOLO11n + OSNet x0.5. Since the improvement in HOTA was small and the identity metric became worse, this combination was saved as a candidate experiment but was not selected as the final full-benchmark configuration.
+YOLOv8n + OSNet x0.5 slightly improved HOTA and MOTA on TUD-Campus, but IDF1 decreased compared with YOLO11n + OSNet x0.5. Since this candidate was not evaluated on all six sequences and the identity metric was worse, it was not selected as the final full-benchmark configuration.
 
-The current best fully evaluated configuration remains YOLO11n + OSNet x0.5, because it was evaluated on all six sequences and achieved the best combined HOTA so far.
+## 14. Overlay videos
 
+Overlay videos were generated for both the initial baseline and the final best modified version.
 
-## 22. Final best overlay update
+The videos are not stored directly in the GitHub repository because they are generated output files. After running the final Colab notebook, they are created in the Colab runtime under:
 
-After evaluating OSNet x0.5 on all six sequences, the best current configuration became:
+```text
+outputs/videos_web/
 
-- detector: YOLO11n;
-- ReID model: OSNet x0.5;
-- detector confidence threshold: 0.40;
-- detector IoU threshold: 0.60;
-- DeepSORT `max_cosine_distance`: 0.30;
-- `nn_budget`: 100.
+The generated runtime paths are:
 
-The best overlay video was therefore regenerated for this final configuration:
-
-| Version | Sequence | Output video |
+| Sequence | Original DeepSORT overlay | Best modified overlay |
 |---|---|---|
-| Initial original DeepSORT baseline | TUD-Campus | `outputs/videos/TUD-Campus_original_deepsort.mp4` |
-| Final best modified version | TUD-Campus | `outputs/videos/TUD-Campus_best_yolo11n_osnet_x0_5.mp4` |
+| KITTI-17 | `outputs/videos_web/original_deepsort/KITTI-17_original_deepsort.mp4` | `outputs/videos_web/best_yolo11n_osnet_x0_5/KITTI-17_best_yolo11n_osnet_x0_5.mp4` |
+| MOT16-09 | `outputs/videos_web/original_deepsort/MOT16-09_original_deepsort.mp4` | `outputs/videos_web/best_yolo11n_osnet_x0_5/MOT16-09_best_yolo11n_osnet_x0_5.mp4` |
+| MOT16-11 | `outputs/videos_web/original_deepsort/MOT16-11_original_deepsort.mp4` | `outputs/videos_web/best_yolo11n_osnet_x0_5/MOT16-11_best_yolo11n_osnet_x0_5.mp4` |
+| PETS09-S2L1 | `outputs/videos_web/original_deepsort/PETS09-S2L1_original_deepsort.mp4` | `outputs/videos_web/best_yolo11n_osnet_x0_5/PETS09-S2L1_best_yolo11n_osnet_x0_5.mp4` |
+| TUD-Campus | `outputs/videos_web/original_deepsort/TUD-Campus_original_deepsort.mp4` | `outputs/videos_web/best_yolo11n_osnet_x0_5/TUD-Campus_best_yolo11n_osnet_x0_5.mp4` |
+| TUD-Stadtmitte | `outputs/videos_web/original_deepsort/TUD-Stadtmitte_original_deepsort.mp4` | `outputs/videos_web/best_yolo11n_osnet_x0_5/TUD-Stadtmitte_best_yolo11n_osnet_x0_5.mp4` |
 
-The final best configuration achieved combined HOTA 45.111, compared with 31.257 for the original DeepSORT baseline.
+In total, the final notebook creates 12 web-compatible overlay videos:
 
+```text
+6 original DeepSORT overlays
+6 final best modified DeepSORT overlays
+```
 
-## 23. Final conclusion
+For direct visual demonstration in Colab, the notebook embeds two representative videos for TUD-Campus:
 
-The project successfully modified the original DeepSORT implementation by replacing the original detection input with modern YOLO-based person detectors and replacing pseudo appearance descriptors with modern ReID embeddings.
+```text
+Original DeepSORT overlay: TUD-Campus
+Best modified DeepSORT overlay: TUD-Campus
+```
 
-The original DeepSORT baseline achieved a combined HOTA of 31.257 on the six required sequences. The best final configuration achieved a combined HOTA of 45.111.
+The videos are converted to H.264 format for browser-compatible playback in Colab.
 
-Final selected configuration:
+## 15. Colab reproducibility
 
-- detector: YOLO11n;
-- detector confidence threshold: 0.40;
-- detector IoU threshold: 0.60;
-- ReID model: OSNet x0.5;
-- ReID feature dimension: 512;
-- DeepSORT `max_cosine_distance`: 0.30;
-- `nn_budget`: 100.
+A clean Colab notebook is provided in the repository:
 
-The final configuration improved HOTA on every required sequence:
+```text
+notebooks/DeepSORT_Project_clean_submission.ipynb
+```
 
-| Sequence | Original HOTA | Final HOTA |
-|---|---:|---:|
-| KITTI-17 | 38.351 | 53.418 |
-| MOT16-09 | 25.344 | 33.100 |
-| MOT16-11 | 26.957 | 46.015 |
-| PETS09-S2L1 | 41.363 | 55.085 |
-| TUD-Campus | 35.183 | 48.294 |
-| TUD-Stadtmitte | 37.729 | 55.625 |
-| **COMBINED** | **31.257** | **45.111** |
+The notebook is designed to run in a clean Colab runtime. It performs the following steps:
 
-The detector experiments showed that modern YOLO detectors improve standalone detection F1 compared with the provided detections. Three detector models were tested: YOLO11n, YOLOv8n and YOLOv5nu. Although YOLOv8n achieved the best F1 on TUD-Campus, YOLO11n was selected for the final full benchmark because it had already been evaluated on all sequences and produced a stable improvement.
+1. Clone the GitHub repository.
+2. Install dependencies.
+3. Download and extract the dataset.
+4. Run original DeepSORT tracking.
+5. Run YOLO11n detections.
+6. Extract OSNet x0.5 ReID features.
+7. Run the final best DeepSORT configuration.
+8. Generate 12 overlay videos.
+9. Convert videos to web-compatible format.
+10. Show two representative overlay videos directly in Colab.
+11. Create a backup archive with generated outputs.
 
-The ReID experiments showed that OSNet x0.5 provided better identity consistency than OSNet x0.25 on the full benchmark. The combined IDF1 increased from 39.665 for the original baseline to 54.055 for the final configuration. MobileNetV2 x1.0 was also tested as a lightweight alternative, but it was treated as an experimental candidate because Torchreid warned that its pretrained weights require manual download.
+Generated outputs are not committed directly to GitHub because they include videos and feature tensors. A separate backup archive can be shared if required.
 
-The project also includes overlay videos for qualitative comparison between the original DeepSORT baseline and the final best modified configuration.
+The final generated backup archive contains:
 
-The additional standalone body ReID task and segmentation model support were not completed in the current version. Therefore, the current work focuses on the main DeepSORT modernization task: detector replacement, ReID replacement, parameter tuning, full MOT-style evaluation, report preparation, Colab reproducibility and Git history preservation.
+```text
+12 tracking txt files
+6 detection txt files
+6 ReID npy files
+12 web-compatible overlay mp4 videos
+report files
+```
+
+## 16. Repository and development history
+
+The repository contains:
+
+```text
+application_util/
+deep_sort/
+src/
+report/
+tools/
+notebooks/
+README.md
+deep_sort_app.py
+requirements.txt
+```
+
+The original DeepSORT implementation was preserved as the basis, and development was performed through separate commits. The repository contains the original project history and additional commits for:
+
+```text
+TrackEval runner
+YOLO detector support
+external detection runner
+OSNet feature extraction
+ReID-based DeepSORT runner
+detector comparison
+ReID comparison
+parameter tuning
+full benchmark results
+overlay generation
+report and README updates
+clean Colab notebook
+```
+
+The large generated files are ignored by Git and are regenerated by the Colab notebook.
+
+## 17. Limitations
+
+The main task was completed: the detector and ReID components of DeepSORT were modernized, the system was evaluated on all required sequences, and the final configuration improved HOTA on every video compared with the original baseline.
+
+The additional task for 9-10 points was not fully completed.
+
+Not completed:
+
+```text
+standalone body ReID with persistent identity database
+kNN identity assignment with cluster management
+time-window majority voting for identity resolution
+conflict resolution between active identities
+segmentation model support
+```
+
+Segmentation model support was also not implemented. The project therefore targets the main-task score range rather than the additional-task score range.
+
+## 18. Conclusion
+
+The final selected configuration is:
+
+```text
+YOLO11n detector
+confidence threshold = 0.40
+detector IoU threshold = 0.60
+OSNet x0.5 ReID
+max_cosine_distance = 0.30
+nn_budget = 100
+```
+
+This configuration achieved:
+
+```text
+Combined HOTA = 45.111
+Combined IDF1 = 54.055
+Combined MOTA = 53.371
+```
+
+The original DeepSORT baseline achieved:
+
+```text
+Combined HOTA = 31.257
+Combined IDF1 = 39.665
+Combined MOTA = 41.949
+```
+
+Thus, the final version increased combined HOTA by 13.854 points and improved tracking quality on every required video sequence.
+
+The experiments show that the largest improvement came from replacing the original detection input with a modern YOLO-based person detector. Adding OSNet x0.5 ReID descriptors further improved association quality and IDF1. The final system is reproducible in Colab, runs with real-time detector speed above the required threshold, and provides overlay videos for both the original and final modified trackers on all six required sequences.
