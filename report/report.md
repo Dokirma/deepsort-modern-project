@@ -52,3 +52,19 @@ At this stage, the project contains:
 - detection Precision / Recall / F1 evaluation.
 
 The simple IoU tracker is not the final method. It is used as an early technical baseline to verify that detections, tracking output format, and overlay generation work correctly.
+
+
+## 5. Original DeepSORT baseline reproduction
+
+The original DeepSORT implementation was successfully merged into the project while preserving the original repository history.
+
+The original `deep_sort_app.py` expects a detection matrix where the first 10 columns follow the MOTChallenge detection format and the remaining columns contain appearance descriptors. Since the provided `det.txt` files contain only MOT-format detections, a converter from `det.txt` to `.npy` was implemented.
+
+At this stage, pseudo appearance descriptors were used only to verify that the original DeepSORT pipeline can run on the provided data. This is not the final ReID solution.
+
+The original DeepSORT baseline was successfully executed on `TUD-Campus`, and an overlay video was generated:
+
+- tracking result: `outputs/tracks/original_deepsort/TUD-Campus.txt`
+- overlay video: `outputs/videos/TUD-Campus_original_deepsort.mp4`
+
+This confirms that the original DeepSORT baseline pipeline works on the provided MOT-style data.
