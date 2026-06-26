@@ -72,7 +72,7 @@ https://github.com/Dokirma/deepsort-modern-project/blob/main/notebooks/DeepSORT_
 A submission notebook is provided in:
 
 ```text
-(https://github.com/Dokirma/deepsort-modern-project/blob/main/notebooks/DeepSORT_Project_submission_checked.ipynb)
+https://github.com/Dokirma/deepsort-modern-project/blob/main/notebooks/DeepSORT_Project_submission_checked.ipynb
 
 ```
 
