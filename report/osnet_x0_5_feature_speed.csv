@@ -1,0 +1,7 @@
+sequence,detections,feature_dim,reid_time_sec,detections_per_sec
+KITTI-17,617,512,3.03,203.88
+MOT16-09,4008,512,9.57,418.86
+MOT16-11,6128,512,15.60,392.89
+PETS09-S2L1,4566,512,13.78,331.39
+TUD-Campus,382,512,1.48,258.96
+TUD-Stadtmitte,992,512,3.24,306.29

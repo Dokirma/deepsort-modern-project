@@ -344,3 +344,32 @@ The experiment used:
 MobileNetV2 x1.0 achieved the best result on TUD-Campus among the three tested ReID models. HOTA increased to 50.421 and IDF1 increased to 72.099.
 
 However, Torchreid produced a warning that ImageNet pretrained weights for MobileNetV2 need to be downloaded manually. Therefore, this result is treated as an experimental candidate and should be interpreted carefully. For the most reproducible full benchmark result, OSNet x0.25 remains the already tested all-sequence ReID baseline, while OSNet x0.5 and MobileNetV2 are promising candidates for further evaluation.
+
+
+## 20. Full benchmark with YOLO11n and OSNet x0.5
+
+After the TUD-Campus ReID comparison, OSNet x0.5 was evaluated on all six sequences.
+
+Configuration:
+
+- detector: YOLO11n;
+- detector confidence threshold: 0.40;
+- detector IoU threshold: 0.60;
+- ReID model: OSNet x0.5;
+- ReID feature dimension: 512;
+- DeepSORT `max_cosine_distance`: 0.30;
+- `nn_budget`: 100.
+
+| Sequence | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|
+| KITTI-17 | 53.418 | 53.696 | 53.159 | 77.569 | 64.450 |
+| MOT16-09 | 33.100 | 32.986 | 33.403 | 38.168 | 37.701 |
+| MOT16-11 | 46.015 | 45.851 | 46.510 | 53.131 | 49.375 |
+| PETS09-S2L1 | 55.085 | 65.709 | 46.261 | 69.370 | 83.763 |
+| TUD-Campus | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 |
+| TUD-Stadtmitte | 55.625 | 61.397 | 50.607 | 71.034 | 77.422 |
+| **COMBINED** | **45.111** | **46.087** | **44.574** | **54.055** | **53.371** |
+
+OSNet x0.5 achieved the best combined HOTA among all tested configurations. The combined HOTA increased from 31.257 for the original DeepSORT baseline to 45.111. IDF1 also increased from 39.665 to 54.055.
+
+Compared with OSNet x0.25, OSNet x0.5 improved the combined HOTA from 43.816 to 45.111 and the combined IDF1 from 52.271 to 54.055. Therefore, the current best configuration is YOLO11n + OSNet x0.5 with `max_cosine_distance = 0.30`.
