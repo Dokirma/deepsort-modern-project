@@ -59,12 +59,12 @@ ReID models:
 
 ## Colab execution instructions
 
-The project is designed to run in a clean Colab runtime. It does not require old Google Drive outputs.
+The project is designed to run in a clean Colab runtime. 
 
 A clean notebook is provided in:
 
 ```text
-notebooks/DeepSORT_Project_clean_submission.ipynb
+[notebooks/DeepSORT_Project_clean_submission.ipynb](https://github.com/Dokirma/deepsort-modern-project/blob/main/notebooks/DeepSORT_Project_submission_checked.ipynb)
 ```
 
 ### 1. Clone repository
