@@ -68,3 +68,49 @@ The original DeepSORT baseline was successfully executed on `TUD-Campus`, and an
 - overlay video: `outputs/videos/TUD-Campus_original_deepsort.mp4`
 
 This confirms that the original DeepSORT baseline pipeline works on the provided MOT-style data.
+
+
+## 6. Original DeepSORT baseline outputs
+
+The original DeepSORT baseline was executed on all six required sequences. The generated tracking outputs are listed below.
+
+| Sequence | Tracking output rows |
+|---|---:|
+| KITTI-17 | 498 |
+| MOT16-09 | 3983 |
+| MOT16-11 | 5830 |
+| PETS09-S2L1 | 5492 |
+| TUD-Campus | 285 |
+| TUD-Stadtmitte | 1140 |
+
+These files are stored in `outputs/tracks/original_deepsort/`. Since the `outputs/` directory is ignored by Git, the numerical summary is saved in the report folder for reproducibility.
+
+
+## 6. Original DeepSORT baseline outputs
+
+The original DeepSORT baseline was executed on all six required sequences. The generated tracking outputs are listed below.
+
+| Sequence | Tracking output rows |
+|---|---:|
+| KITTI-17 | 498 |
+| MOT16-09 | 3983 |
+| MOT16-11 | 5830 |
+| PETS09-S2L1 | 5492 |
+| TUD-Campus | 285 |
+| TUD-Stadtmitte | 1140 |
+
+
+
+## 6. Original DeepSORT baseline outputs
+
+The original DeepSORT baseline was executed on all six required sequences. The tracking outputs are listed below.
+
+| Sequence | Tracking output rows |
+|---|---:|
+| KITTI-17 | 498 |
+| MOT16-09 | 3983 |
+| MOT16-11 | 5830 |
+| PETS09-S2L1 | 5492 |
+| TUD-Campus | 285 |
+| TUD-Stadtmitte | 1140 |
+
