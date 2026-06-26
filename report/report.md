@@ -198,3 +198,18 @@ The detector-only modified DeepSORT pipeline was evaluated on all six sequences.
 Replacing the detector with YOLO11n improved HOTA on every sequence. The combined HOTA increased from 31.257 to 42.369. IDF1 also improved from 39.665 to 49.166, and MOTA improved from 41.949 to 53.116.
 
 This confirms that the modern detector improves the final tracking quality, not only the standalone detection F1 score. The next step is to replace the pseudo descriptors with real modern ReID embeddings.
+
+
+## 12. First ReID experiment: OSNet x0.25 on TUD-Campus
+
+The first modern ReID experiment used OSNet x0.25 from Torchreid. YOLO11n detections with confidence threshold 0.40 were used as input detections.
+
+| Variant | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|
+| Original DeepSORT | 35.183 | 42.198 | 29.556 | 52.174 | 44.290 |
+| DeepSORT + YOLO11n + pseudo features | 46.566 | 44.274 | 49.137 | 65.385 | 53.482 |
+| DeepSORT + YOLO11n + OSNet x0.25 | 44.025 | 47.724 | 40.973 | 60.414 | 53.203 |
+
+OSNet x0.25 improved over the original DeepSORT baseline, but it did not outperform the pseudo-feature detector-only variant on TUD-Campus. This is a useful negative result. A possible explanation is that the pseudo descriptors encode bbox position and size, which can accidentally help on short and simple sequences, while OSNet relies on appearance information and requires proper matching threshold tuning.
+
+The next step is to tune DeepSORT parameters for OSNet, especially `max_cosine_distance`.

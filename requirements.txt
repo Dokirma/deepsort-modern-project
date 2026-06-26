@@ -7,3 +7,5 @@ gdown
 matplotlib
 
 ultralytics
+
+torchreid

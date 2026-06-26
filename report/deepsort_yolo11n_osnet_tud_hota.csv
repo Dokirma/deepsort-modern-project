@@ -1,0 +1,4 @@
+sequence,tracker,hota,deta,assa,idf1,mota
+TUD-Campus,original_deepsort,35.183,42.198,29.556,52.174,44.290
+TUD-Campus,deepsort_yolo11n_conf040_pseudo,46.566,44.274,49.137,65.385,53.482
+TUD-Campus,deepsort_yolo11n_osnet_x0_25,44.025,47.724,40.973,60.414,53.203
