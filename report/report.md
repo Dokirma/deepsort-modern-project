@@ -213,3 +213,19 @@ The first modern ReID experiment used OSNet x0.25 from Torchreid. YOLO11n detect
 OSNet x0.25 improved over the original DeepSORT baseline, but it did not outperform the pseudo-feature detector-only variant on TUD-Campus. This is a useful negative result. A possible explanation is that the pseudo descriptors encode bbox position and size, which can accidentally help on short and simple sequences, while OSNet relies on appearance information and requires proper matching threshold tuning.
 
 The next step is to tune DeepSORT parameters for OSNet, especially `max_cosine_distance`.
+
+
+## 13. OSNet x0.25 parameter tuning on TUD-Campus
+
+The `max_cosine_distance` parameter was tuned for the YOLO11n + OSNet x0.25 configuration on TUD-Campus.
+
+| Model | max_cosine_distance | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---:|---:|---:|---:|---:|---:|
+| OSNet x0.25 | 0.20 | 44.025 | 47.724 | 40.973 | 60.414 | 53.203 |
+| OSNet x0.25 | 0.30 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 |
+| OSNet x0.25 | 0.40 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 |
+| OSNet x0.25 | 0.50 | 44.098 | 47.659 | 41.155 | 60.440 | 52.925 |
+
+The best result was obtained with `max_cosine_distance = 0.30` or `0.40`. Since both values gave the same HOTA, `0.30` was selected as the safer and stricter setting for further experiments.
+
+This tuning slightly improved HOTA from 44.025 to 44.197 compared with the initial OSNet setting, but it still did not outperform the detector-only pseudo-feature variant on TUD-Campus.

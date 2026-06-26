@@ -1,0 +1,5 @@
+sequence,model,max_cosine_distance,hota,deta,assa,idf1,mota
+TUD-Campus,osnet_x0_25,0.20,44.025,47.724,40.973,60.414,53.203
+TUD-Campus,osnet_x0_25,0.30,44.197,47.869,41.160,60.606,53.482
+TUD-Campus,osnet_x0_25,0.40,44.197,47.869,41.160,60.606,53.482
+TUD-Campus,osnet_x0_25,0.50,44.098,47.659,41.155,60.440,52.925
