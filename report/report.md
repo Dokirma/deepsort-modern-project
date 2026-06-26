@@ -321,3 +321,26 @@ The second ReID model experiment used OSNet x0.5 from Torchreid. The same YOLO11
 | YOLO11n | OSNet x0.5 | 0.30 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 | 252.67 |
 
 OSNet x0.5 outperformed OSNet x0.25 on TUD-Campus. HOTA increased from 44.197 to 48.294, and IDF1 increased from 60.606 to 67.218. This suggests that OSNet x0.5 provides stronger appearance descriptors for this sequence while still remaining fast enough for Colab experiments.
+
+
+## 19. Third ReID model: MobileNetV2 x1.0
+
+A third ReID model, MobileNetV2 x1.0, was evaluated on TUD-Campus. This model was selected because it is lightweight and belongs to a different architecture family than OSNet.
+
+The experiment used:
+
+- detector: YOLO11n;
+- detector confidence threshold: 0.40;
+- ReID model: MobileNetV2 x1.0;
+- DeepSORT `max_cosine_distance`: 0.30;
+- `nn_budget`: 100.
+
+| Detector | ReID model | Feature dim | HOTA | DetA | AssA | IDF1 | MOTA | ReID detections/sec |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| YOLO11n | OSNet x0.25 | 512 | 44.197 | 47.869 | 41.160 | 60.606 | 53.482 | 224.80 |
+| YOLO11n | OSNet x0.5 | 512 | 48.294 | 48.359 | 48.454 | 67.218 | 55.710 | 252.67 |
+| YOLO11n | MobileNetV2 x1.0 | 1280 | 50.421 | 48.135 | 52.991 | 72.099 | 56.546 | 462.50 |
+
+MobileNetV2 x1.0 achieved the best result on TUD-Campus among the three tested ReID models. HOTA increased to 50.421 and IDF1 increased to 72.099.
+
+However, Torchreid produced a warning that ImageNet pretrained weights for MobileNetV2 need to be downloaded manually. Therefore, this result is treated as an experimental candidate and should be interpreted carefully. For the most reproducible full benchmark result, OSNet x0.25 remains the already tested all-sequence ReID baseline, while OSNet x0.5 and MobileNetV2 are promising candidates for further evaluation.
