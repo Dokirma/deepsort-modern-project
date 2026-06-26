@@ -260,3 +260,23 @@ The full YOLO11n + OSNet x0.25 configuration achieved the best combined HOTA so 
 The most important improvement from OSNet appears in association-related metrics. Combined IDF1 increased from 49.166 with pseudo features to 52.271 with OSNet. This confirms that the modern ReID model improves identity consistency across the full dataset, even though it was not better on every individual sequence.
 
 The result also shows why evaluation on all sequences is necessary: on TUD-Campus alone, pseudo features performed better, but on the full benchmark OSNet gave the stronger combined result.
+
+
+## 15. Overlay videos
+
+Two overlay videos were generated for qualitative comparison:
+
+| Version | Sequence | Output video |
+|---|---|---|
+| Initial original DeepSORT baseline | TUD-Campus | `outputs/videos/TUD-Campus_original_deepsort.mp4` |
+| Best current modified version | TUD-Campus | `outputs/videos/TUD-Campus_best_yolo11n_osnet_x0_25.mp4` |
+
+The best current version uses:
+
+- YOLO11n detector;
+- confidence threshold 0.40;
+- OSNet x0.25 ReID model;
+- `max_cosine_distance = 0.30`;
+- `nn_budget = 100`.
+
+The videos are stored in the `outputs/videos/` directory. This directory is ignored by Git, because generated videos are large and can be recreated from the provided scripts.
