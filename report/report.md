@@ -408,3 +408,40 @@ The best overlay video was therefore regenerated for this final configuration:
 | Final best modified version | TUD-Campus | `outputs/videos/TUD-Campus_best_yolo11n_osnet_x0_5.mp4` |
 
 The final best configuration achieved combined HOTA 45.111, compared with 31.257 for the original DeepSORT baseline.
+
+
+## 23. Final conclusion
+
+The project successfully modified the original DeepSORT implementation by replacing the original detection input with modern YOLO-based person detectors and replacing pseudo appearance descriptors with modern ReID embeddings.
+
+The original DeepSORT baseline achieved a combined HOTA of 31.257 on the six required sequences. The best final configuration achieved a combined HOTA of 45.111.
+
+Final selected configuration:
+
+- detector: YOLO11n;
+- detector confidence threshold: 0.40;
+- detector IoU threshold: 0.60;
+- ReID model: OSNet x0.5;
+- ReID feature dimension: 512;
+- DeepSORT `max_cosine_distance`: 0.30;
+- `nn_budget`: 100.
+
+The final configuration improved HOTA on every required sequence:
+
+| Sequence | Original HOTA | Final HOTA |
+|---|---:|---:|
+| KITTI-17 | 38.351 | 53.418 |
+| MOT16-09 | 25.344 | 33.100 |
+| MOT16-11 | 26.957 | 46.015 |
+| PETS09-S2L1 | 41.363 | 55.085 |
+| TUD-Campus | 35.183 | 48.294 |
+| TUD-Stadtmitte | 37.729 | 55.625 |
+| **COMBINED** | **31.257** | **45.111** |
+
+The detector experiments showed that modern YOLO detectors improve standalone detection F1 compared with the provided detections. Three detector models were tested: YOLO11n, YOLOv8n and YOLOv5nu. Although YOLOv8n achieved the best F1 on TUD-Campus, YOLO11n was selected for the final full benchmark because it had already been evaluated on all sequences and produced a stable improvement.
+
+The ReID experiments showed that OSNet x0.5 provided better identity consistency than OSNet x0.25 on the full benchmark. The combined IDF1 increased from 39.665 for the original baseline to 54.055 for the final configuration. MobileNetV2 x1.0 was also tested as a lightweight alternative, but it was treated as an experimental candidate because Torchreid warned that its pretrained weights require manual download.
+
+The project also includes overlay videos for qualitative comparison between the original DeepSORT baseline and the final best modified configuration.
+
+The additional standalone body ReID task and segmentation model support were not completed in the current version. Therefore, the current work focuses on the main DeepSORT modernization task: detector replacement, ReID replacement, parameter tuning, full MOT-style evaluation, report preparation, Colab reproducibility and Git history preservation.
