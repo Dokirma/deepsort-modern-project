@@ -167,3 +167,15 @@ YOLO11n with confidence threshold 0.40 and IoU threshold 0.60 was evaluated on a
 YOLO11n improved F1 on every sequence. The average F1 increased from 0.7060 for the provided detections to 0.8199 for YOLO11n. The detector also satisfies the real-time requirement, because the FPS was higher than 5 on every sequence.
 
 This confirms that YOLO11n with confidence 0.40 is a strong candidate detector for the modified DeepSORT pipeline.
+
+
+## 10. Detector-only DeepSORT update on TUD-Campus
+
+The first modified DeepSORT experiment replaced the provided detections with YOLO11n detections. The ReID descriptors were still pseudo descriptors at this stage, so this experiment evaluates the effect of detector replacement only.
+
+| Tracker | Detector | HOTA | DetA | AssA | IDF1 | MOTA |
+|---|---|---:|---:|---:|---:|---:|
+| Original DeepSORT baseline | provided det.txt | 35.183 | 42.198 | 29.556 | 52.174 | 44.290 |
+| DeepSORT + YOLO11n | YOLO11n conf=0.40 | 46.566 | 44.274 | 49.137 | 65.385 | 53.482 |
+
+Replacing the detector improved HOTA from 35.183 to 46.566 on TUD-Campus. IDF1 also increased from 52.174 to 65.385. This confirms that the YOLO11n detector improves not only detection F1 but also the final tracking quality.
