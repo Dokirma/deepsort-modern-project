@@ -293,3 +293,19 @@ To satisfy the requirement of supporting multiple detection models, lightweight 
 | YOLOv8n | 0.40 | 379 | 48.96 | 0.7863 | 0.8301 | 0.8076 |
 
 YOLOv8n achieved the best F1 on TUD-Campus among the tested lightweight detectors. It also had higher FPS than YOLO11n in this experiment. This result shows that a smaller or older detector architecture can still be competitive under limited Colab resources.
+
+
+## 17. Third detector model: YOLOv5nu
+
+A third lightweight detector, YOLOv5nu, was evaluated on TUD-Campus to satisfy the requirement of supporting at least three detection models.
+
+| Detector | Conf | Detections | FPS | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| Provided det.txt | - | 322 | - | 0.7143 | 0.6407 | 0.6755 |
+| YOLO11n | 0.40 | 382 | 33.62 | 0.7644 | 0.8134 | 0.7881 |
+| YOLOv8n | 0.40 | 379 | 48.96 | 0.7863 | 0.8301 | 0.8076 |
+| YOLOv5nu | 0.40 | 376 | 47.42 | 0.7713 | 0.8078 | 0.7891 |
+
+All three modern detectors improved over the provided detections on TUD-Campus. YOLOv8n achieved the best F1, while YOLOv5nu was also competitive and remained real-time in Colab.
+
+The implementation supports model selection through the `--model` argument of `src/detectors/yolo_detector.py`.
