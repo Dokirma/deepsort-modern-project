@@ -1,3 +1,4 @@
+import argparse
 import sys
 import numpy as np
 
@@ -14,6 +15,11 @@ import trackeval
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tracker-name", required=True)
+    parser.add_argument("--seqmap-file", required=True)
+    args = parser.parse_args()
+
     eval_config = trackeval.Evaluator.get_default_eval_config()
     eval_config["USE_PARALLEL"] = False
     eval_config["NUM_PARALLEL_CORES"] = 1
@@ -24,10 +30,11 @@ def main():
     dataset_config["GT_FOLDER"] = "data/trackeval/gt"
     dataset_config["TRACKERS_FOLDER"] = "data/trackeval/trackers"
     dataset_config["OUTPUT_FOLDER"] = "outputs/trackeval"
-    dataset_config["TRACKERS_TO_EVAL"] = ["original_deepsort"]
+    dataset_config["TRACKERS_TO_EVAL"] = [args.tracker_name]
     dataset_config["BENCHMARK"] = "DLCV"
     dataset_config["SPLIT_TO_EVAL"] = "train"
     dataset_config["SEQMAP_FOLDER"] = "data/trackeval/seqmaps"
+    dataset_config["SEQMAP_FILE"] = f"data/trackeval/seqmaps/{args.seqmap_file}"
     dataset_config["DO_PREPROC"] = False
     dataset_config["PRINT_CONFIG"] = False
 
